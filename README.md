@@ -7,16 +7,16 @@ Potsiu! is a simple utility function that allows you to update indexes of specif
 ```js
 import { calculateNewIndex } from 'potsiu';
 
-const originalString = 'Hey! John! Where are you going... is Sarah going with you?';
-const transformedString = 'Hey John Where are you going is Sarah going with you';
-const originalIndex = 37;
+const originalString = 'First sentence. Second sentence. Third sentence.';
+const transformedString = 'First sentence Second sentence Third sentence';
+const originalIndex = 33;
 
-// Outputs: "Hey! John! Where are you going... is >Sarah going with you?"
+// Outputs: "First sentence. Second sentence. >Third sentence."
 console.log(originalString.slice(0, originalIndex) + '>' + originalString.slice(originalIndex, originalString.length));
 
 const newIndex = calculateNewIndex(originalString, transformedString, originalIndex);
 
-// Outputs: "Hey John Where are you going is >Sarah going with you"
+// Outputs: "First sentence Second sentence >Third sentence."
 console.log(transformedString.slice(0, newIndex) + '>' + transformedString.slice(newIndex, originalString.length));
 
 ```
@@ -24,24 +24,24 @@ console.log(transformedString.slice(0, newIndex) + '>' + transformedString.slice
 
 ## Motivation
 
-Suppose you have some string mentioning person names:
+Suppose you have some string where you've identified every term of foreign origin:
 ```
-Hey! John! Where are you going... is Sarah going with you?
-     ^ (5)                           ^ (37)
+Hey! Do you like croissants?... Can you hand me that dossier?
+                 ^ (17)                              ^ (53)
 
 ```
 
 
-You determined that the names start on indexes *5* (John) and *37* (Sarah).
+You determined that the terms start on indexes *17* (croissants) and *53* (dossier).
 Now, if for some reason you need to remove punctuation from your string...
 
 ```
-Hey John Where are you going is Sarah going with you
-     ^ (5)                           ^ (37)
+Hey Do you like croissants Can you hand me that dossier
+                 ^ (17)                              ^ (53)
 ```
 
 
-...the indexes you have no longer match the names positions. This is a problem, for instance, when one needs to process the sentences/texts on named entity recognition (NER) datasets, which are often tagged manually, while keeping the indexes matching the entities positions. It is often quite complex to update these indexes, since different transformations can replace, remove, or add any amount of characters.
+...the indexes you have no longer match the terms positions. It is often quite complex to reuse previously computed indexes after transformations since they can replace, remove, or add any amount of characters.
 
 ## How it works
 
@@ -50,18 +50,18 @@ Potsiu! finds the index, on the transformed string, for which the surroundings b
 It is quite capable of handling aggressive transformations:
 
 ```
-<intro>Hey!</intro><b> Let's tell John to <i>remove</i> some tags!</b>/tags>
-                                  ^ (34)
+<b> Let's <i>remove</i> some tags</b> and eat croissants
+                                              ^ (46)
 
-Hey Let's tell John to remove some tags!
-               ^ (15)
+Let's remove some tags and eat croissants
+                               ^ (31)
 ```
 ```
-dude, oporto is sick yo.
-      ^ (6)
+hey, the index will mark second sentence start. hey!
+                                                ^ (48)
 
-D00D 0p0R70 12 51CK Y0
-     ^ (5)
+H3Y T3H 1nd3X W1ll m4rk 53c0nD 53NT3Nc3 5t4RT h3Y
+                                              ^ (46)
 ```
 
 ### Precautions
@@ -69,20 +69,20 @@ D00D 0p0R70 12 51CK Y0
 Potsiu! tends to give you the expected results. However extremely aggressive transformations may render the transformed string so different from the original that Potsiu! can no longer track the surroundings of the original index:
 
 ```
-MA_DUDE_OPORTO_IS_SOOOO_SICK
+MA_DUDE_SOUFFLE_IS_SOOOO_SICK
         ^ (8)
 
-dude oporto is sick
+dude souffle is sick
 ^ (0)
 ```
 
 In these case feeding Potsiu! both sentences in lowercase would have allowed it to keep track of the index:
 
 ```
-ma_dude_oporto_is_soooo_sick
+ma_dude_souffle_is_soooo_sick
         ^ (8)
 
-dude oporto is sick
+dude souffle is sick
      ^ (5)
 ```
 
